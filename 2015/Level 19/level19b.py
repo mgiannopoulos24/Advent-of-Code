@@ -1,34 +1,40 @@
 from collections import deque
 
-def generate_molecules(replacements, molecule):
-    molecules = set()
-    for i in range(len(molecule)):
-        for source, target in replacements:
-            if molecule[i:i+len(source)] == source:
-                new_molecule = molecule[:i] + target + molecule[i+len(source):]
-                molecules.add(new_molecule)
-    return molecules
+def reverse_replacements(replacements):
+    # Reverse the direction of the replacements for backward search
+    return [(target, source) for source, target in replacements]
 
-def find_steps_to_medicine(replacements, medicine):
-    queue = deque([(medicine, 0)])  # (molecule, steps)
+def generate_reverse_molecule(replacements, molecule):
+    # Generate all possible previous molecules by applying reversed replacements
+    prev_molecules = set()
+    for source, target in replacements:
+        start = 0
+        while True:
+            start = molecule.find(target, start)
+            if start == -1: break
+            prev_molecule = molecule[:start] + source + molecule[start+len(target):]
+            prev_molecules.add(prev_molecule)
+            start += len(target)
+    return prev_molecules
+
+def find_shortest_path(replacements, target):
+    reversed_replacements = reverse_replacements(replacements)
+    queue = deque([(target, 0)])  # molecule, steps
     visited = set()
-
+    
     while queue:
-        current_molecule, steps = queue.popleft()
-
-        if current_molecule == 'e':
+        molecule, steps = queue.popleft()
+        if molecule == "e":
             return steps
+        if molecule in visited:
+            continue
+        visited.add(molecule)
 
-        for source, target in replacements:
-            for i in range(len(current_molecule)):
-                if current_molecule[i:i+len(target)] == target:
-                    new_molecule = current_molecule[:i] + source + current_molecule[i+len(target):]
+        for prev_molecule in generate_reverse_molecule(reversed_replacements, molecule):
+            if prev_molecule not in visited:
+                queue.append((prev_molecule, steps + 1))
 
-                    if new_molecule not in visited:
-                        visited.add(new_molecule)
-                        queue.append((new_molecule, steps + 1))
-
-    return -1  # No solution found
+    return -1  # No path found
 
 def main():
     with open('input_level_19.txt', 'r') as f:
@@ -37,12 +43,12 @@ def main():
     replacements = []
     for line in lines[:-2]:
         source, _, target = line.strip().split()
-        replacements.append((target, source))  # Reversing source and target
+        replacements.append((source, target))
 
-    medicine = lines[-1].strip()
+    molecule = lines[-1].strip()
 
-    steps = find_steps_to_medicine(replacements, medicine)
-    print("Fewest number of steps to go from 'e' to the medicine molecule:", steps)
+    steps = find_shortest_path(replacements, molecule)
+    print(steps)
 
 if __name__ == "__main__":
     main()
