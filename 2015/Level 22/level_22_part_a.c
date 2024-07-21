@@ -1,107 +1,109 @@
 #include <stdio.h>
+#include <limits.h>
 #include <stdbool.h>
-#include <string.h>
+#include <stdlib.h>
 
-#define MAX_SPELLS 5
+#define MAX_HP 50
+#define MAX_MANA 500
+#define BOSS_HP 55
+#define BOSS_DAMAGE 8
 
-// Structure to represent a spell
-typedef struct Spell {
-    char name[20];
-    int cost;
-    int damage;
-    int heal;
-    int armor;
-    int poison;
-    int recharge;
-    int effectTimer;
-} Spell;
+typedef struct {
+    int player_hp;
+    int player_mana;
+    int boss_hp;
+    int shield_duration;
+    int poison_duration;
+    int recharge_duration;
+} GameState;
 
-// Function to simulate the player's turn
-void playerTurn(int *playerHP, int *playerMana, int *bossHP, int *manaSpent, Spell spells[]) {
-    int i;
-    for (i = 0; i < MAX_SPELLS; i++) {
-        if (spells[i].cost <= *playerMana && spells[i].effectTimer == 0) {
-            switch (i) {
-                case 0: // Magic Missile
-                    *bossHP -= spells[i].damage;
-                    break;
-                case 1: // Drain
-                    *bossHP -= spells[i].damage;
-                    *playerHP += spells[i].heal;
-                    break;
-                case 2: // Shield
-                    *playerMana -= spells[i].cost;
-                    spells[i].effectTimer = spells[i].armor;
-                    break;
-                case 3: // Poison
-                    spells[i].effectTimer = spells[i].poison;
-                    break;
-                case 4: // Recharge
-                    spells[i].effectTimer = spells[i].recharge;
-                    break;
-            }
-            *playerMana -= spells[i].cost;
-            *manaSpent += spells[i].cost;
-            break;
-        }
+int minManaSpent = INT_MAX;
+
+bool isGameOver(GameState state) {
+    return state.player_hp <= 0 || state.boss_hp <= 0;
+}
+
+void applyEffects(GameState *state) {
+    if (state->poison_duration > 0) {
+        state->boss_hp -= 3;
+        state->poison_duration--;
+    }
+    if (state->recharge_duration > 0) {
+        state->player_mana += 101;
+        state->recharge_duration--;
+    }
+    if (state->shield_duration > 0) {
+        state->shield_duration--;
     }
 }
 
-// Function to simulate the boss's turn
-void bossTurn(int *playerHP, int *playerMana, int *bossHP, Spell spells[]) {
-    int bossDamage = 10;
-    int playerArmor = 0;
-    for (int i = 0; i < MAX_SPELLS; i++) {
-        if (spells[i].effectTimer > 0) {
-            switch (i) {
-                case 2: // Shield
-                    playerArmor = spells[i].armor;
-                    break;
-                case 3: // Poison
-                    *bossHP -= spells[i].damage;
-                    break;
-                case 4: // Recharge
-                    *playerMana += spells[i].recharge;
-                    break;
+void simulate(GameState state, int manaSpent) {
+    if (isGameOver(state)) {
+        if (state.boss_hp <= 0) {
+            if (manaSpent < minManaSpent) {
+                minManaSpent = manaSpent;
             }
-            spells[i].effectTimer--;
         }
+        return;
     }
-    int damage = (bossDamage - playerArmor > 0) ? (bossDamage - playerArmor) : 1;
-    *playerHP -= damage;
-}
+    
+    // If mana spent is already more than the minimum found, return
+    if (manaSpent >= minManaSpent) {
+        return;
+    }
+    
+    // Apply effects before player's turn
+    applyEffects(&state);
 
-// Function to check if the game is over
-bool gameOver(int playerHP, int playerMana, int bossHP) {
-    return (playerHP <= 0 || playerMana < 0 || bossHP <= 0);
+    // Player's turn
+    // Magic Missile
+    if (state.player_mana >= 53) {
+        GameState nextState = state;
+        nextState.boss_hp -= 4;
+        nextState.player_mana -= 53;
+        simulate(nextState, manaSpent + 53);
+    }
+
+    // Drain
+    if (state.player_mana >= 73) {
+        GameState nextState = state;
+        nextState.boss_hp -= 2;
+        nextState.player_hp += 2;
+        nextState.player_mana -= 73;
+        simulate(nextState, manaSpent + 73);
+    }
+
+    // Shield
+    if (state.player_mana >= 113 && state.shield_duration == 0) {
+        GameState nextState = state;
+        nextState.shield_duration = 6;
+        nextState.player_mana -= 113;
+        simulate(nextState, manaSpent + 113);
+    }
+
+    // Poison
+    if (state.player_mana >= 173 && state.poison_duration == 0) {
+        GameState nextState = state;
+        nextState.poison_duration = 6;
+        nextState.player_mana -= 173;
+        simulate(nextState, manaSpent + 173);
+    }
+
+    // Recharge
+    if (state.player_mana >= 229 && state.recharge_duration == 0) {
+        GameState nextState = state;
+        nextState.recharge_duration = 5;
+        nextState.player_mana -= 229;
+        simulate(nextState, manaSpent + 229);
+    }
 }
 
 int main() {
-    int playerHP = 50;
-    int playerMana = 500;
-    int bossHP = 71;
-    int manaSpent = 0;
+    GameState initialState = {50, 500, BOSS_HP, 0, 0, 0};
 
-    // Initialize spells
-    Spell spells[MAX_SPELLS] = {
-        {"Magic Missile", 53, 4, 0, 0, 0, 0, 0},
-        {"Drain", 73, 2, 2, 0, 0, 0, 0},
-        {"Shield", 113, 0, 0, 7, 0, 0, 0},
-        {"Poison", 173, 0, 0, 0, 3, 0, 0},
-        {"Recharge", 229, 0, 0, 0, 0, 101, 0}
-    };
+    simulate(initialState, 0);
 
-    int leastManaSpent = -1;
-
-    // Simulate the game
-    while (!gameOver(playerHP, playerMana, bossHP)) {
-        playerTurn(&playerHP, &playerMana, &bossHP, &manaSpent, spells);
-        if (gameOver(playerHP, playerMana, bossHP)) break;
-        bossTurn(&playerHP, &playerMana, &bossHP, spells);
-    }
-
-    // Output the least amount of mana spent to win the fight
-    printf("Least amount of mana spent to win the fight: %d\n", manaSpent);
+    printf("Minimum Mana Spent: %d\n", minManaSpent);
 
     return 0;
 }
