@@ -64,12 +64,12 @@ int main() {
     }
     fclose(file);
 
-    if (totalWeight % 3 != 0) {
-        printf("Packages cannot be evenly divided into three groups.\n");
+    if (totalWeight % 4 != 0) {
+        printf("Packages cannot be evenly divided into four groups.\n");
         return 1;
     }
 
-    int targetWeight = totalWeight / 3;
+    int targetWeight = totalWeight / 4;
     findIdealConfiguration(packages, numPackages, targetWeight);
 
     return 0;
