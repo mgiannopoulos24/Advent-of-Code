@@ -54,6 +54,10 @@ int boss_turn(Player player, Boss boss, Effects effects, int mana_spent) {
 }
 
 int player_turn(Player player, Boss boss, Effects effects, int mana_spent) {
+    // Lose 1 hit point at the start of the player's turn (hard mode rule)
+    player.hp -= 1;
+    if (player.hp <= 0) return INT_MAX;  // Player loses
+
     apply_effects(&player, &boss, &effects);
 
     if (boss.hp <= 0) return mana_spent;  // Player wins
