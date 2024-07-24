@@ -49,6 +49,9 @@ int bfs(Replacement *replacements, int rep_count, const char *target) {
     Node *queue = NULL;
     insert(&queue, "e", 0);
 
+    Node *visited = NULL;
+    insert(&visited, "e", 0);
+
     while (queue != NULL) {
         Node *current = queue;
         queue = queue->next;
@@ -56,6 +59,7 @@ int bfs(Replacement *replacements, int rep_count, const char *target) {
         if (strcmp(current->molecule, target) == 0) {
             int steps = current->steps;
             free_list(queue);
+            free_list(visited);
             free(current);
             return steps;
         }
@@ -70,8 +74,10 @@ int bfs(Replacement *replacements, int rep_count, const char *target) {
                     new_molecule[i] = '\0';
                     strcat(new_molecule, replacements[j].target);
                     strcat(new_molecule, &current->molecule[i + src_len]);
-                    if (!contains(queue, new_molecule)) {
+
+                    if (!contains(visited, new_molecule)) {
                         insert(&queue, new_molecule, current->steps + 1);
+                        insert(&visited, new_molecule, current->steps + 1);
                     }
                 }
             }
@@ -80,6 +86,7 @@ int bfs(Replacement *replacements, int rep_count, const char *target) {
         free(current);
     }
 
+    free_list(visited);
     return -1; // If no solution is found
 }
 
