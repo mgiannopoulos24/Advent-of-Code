@@ -17,12 +17,30 @@ typedef struct Node {
     struct Node *next;
 } Node;
 
-void insert(Node **head, const char *molecule, int steps) {
+void enqueue(Node **head, const char *molecule, int steps) {
     Node *new_node = (Node *)malloc(sizeof(Node));
     strcpy(new_node->molecule, molecule);
     new_node->steps = steps;
-    new_node->next = *head;
-    *head = new_node;
+    new_node->next = NULL;
+    
+    if (*head == NULL) {
+        *head = new_node;
+    } else {
+        Node *current = *head;
+        while (current->next != NULL) {
+            current = current->next;
+        }
+        current->next = new_node;
+    }
+}
+
+Node *dequeue(Node **head) {
+    if (*head == NULL) {
+        return NULL;
+    }
+    Node *temp = *head;
+    *head = (*head)->next;
+    return temp;
 }
 
 int contains(Node *head, const char *molecule) {
@@ -45,49 +63,25 @@ void free_list(Node *head) {
     }
 }
 
-int bfs(Replacement *replacements, int rep_count, const char *target) {
-    Node *queue = NULL;
-    insert(&queue, "e", 0);
+void generate_molecules(Replacement *replacements, int rep_count, const char *molecule, Node **queue, Node **visited, int steps) {
+    int mol_len = strlen(molecule);
 
-    Node *visited = NULL;
-    insert(&visited, "e", 0);
-
-    while (queue != NULL) {
-        Node *current = queue;
-        queue = queue->next;
-
-        if (strcmp(current->molecule, target) == 0) {
-            int steps = current->steps;
-            free_list(queue);
-            free_list(visited);
-            free(current);
-            return steps;
-        }
-
-        int mol_len = strlen(current->molecule);
-        for (int i = 0; i < mol_len; i++) {
-            for (int j = 0; j < rep_count; j++) {
-                int src_len = strlen(replacements[j].source);
-                if (strncmp(&current->molecule[i], replacements[j].source, src_len) == 0) {
-                    char new_molecule[MAX_MOLECULE_LENGTH];
-                    strncpy(new_molecule, current->molecule, i);
-                    new_molecule[i] = '\0';
-                    strcat(new_molecule, replacements[j].target);
-                    strcat(new_molecule, &current->molecule[i + src_len]);
-
-                    if (!contains(visited, new_molecule)) {
-                        insert(&queue, new_molecule, current->steps + 1);
-                        insert(&visited, new_molecule, current->steps + 1);
-                    }
+    for (int i = 0; i < mol_len; i++) {
+        for (int j = 0; j < rep_count; j++) {
+            int src_len = strlen(replacements[j].source);
+            if (strncmp(&molecule[i], replacements[j].source, src_len) == 0) {
+                char new_molecule[MAX_MOLECULE_LENGTH];
+                strncpy(new_molecule, molecule, i);
+                new_molecule[i] = '\0';
+                strcat(new_molecule, replacements[j].target);
+                strcat(new_molecule, &molecule[i + src_len]);
+                if (!contains(*visited, new_molecule)) {
+                    enqueue(queue, new_molecule, steps + 1);
+                    enqueue(visited, new_molecule, 0);
                 }
             }
         }
-
-        free(current);
     }
-
-    free_list(visited);
-    return -1; // If no solution is found
 }
 
 int main() {
@@ -109,18 +103,31 @@ int main() {
         rep_count++;
     }
 
-    char target_molecule[MAX_MOLECULE_LENGTH];
-    fgets(target_molecule, sizeof(target_molecule), file);
-    target_molecule[strcspn(target_molecule, "\n")] = 0;  // Remove newline character
+    char molecule[MAX_MOLECULE_LENGTH];
+    fgets(molecule, sizeof(molecule), file);
+    molecule[strcspn(molecule, "\n")] = 0;  // Remove newline character
 
     fclose(file);
 
-    int steps = bfs(replacements, rep_count, target_molecule);
-    if (steps != -1) {
-        printf("Fewest number of steps to make the medicine: %d\n", steps);
-    } else {
-        printf("No solution found.\n");
+    // BFS to find the minimum steps
+    Node *queue = NULL;
+    Node *visited = NULL;
+    enqueue(&queue, "e", 0);
+    enqueue(&visited, "e", 0);
+
+    while (queue != NULL) {
+        Node *current = dequeue(&queue);
+        if (strcmp(current->molecule, molecule) == 0) {
+            printf("Fewest number of steps: %d\n", current->steps);
+            free(current);
+            break;
+        }
+        generate_molecules(replacements, rep_count, current->molecule, &queue, &visited, current->steps);
+        free(current);
     }
+
+    free_list(queue);
+    free_list(visited);
 
     return 0;
 }
