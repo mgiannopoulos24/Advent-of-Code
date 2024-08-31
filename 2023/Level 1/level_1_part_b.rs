@@ -38,7 +38,7 @@ fn main() -> io::Result<()> {
                         } else {
                             last_digit = Some(n);
                         }
-                        i += num.len() - 1; // Skip over the length of the matched word
+                        i += num.len() - 1; 
                         break;
                     }
                 }
@@ -47,7 +47,7 @@ fn main() -> io::Result<()> {
         }
 
         let first_digit = first_digit.unwrap_or(0);
-        let last_digit = last_digit.unwrap_or(first_digit); // Use first_digit if last_digit is not found
+        let last_digit = last_digit.unwrap_or(first_digit); 
         sum += first_digit * 10 + last_digit;
     }
 
