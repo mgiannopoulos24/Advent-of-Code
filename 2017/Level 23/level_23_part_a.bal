@@ -3,7 +3,7 @@ import ballerina/regex;
 
 public function main() returns error? {
     // Read the input from the file
-    string content = check io:fileReadString("input.txt");
+    string content = check io:fileReadString("input_level_23.txt");
 
     // Split the content into lines
     string[] lines = regex:split(content, "\r?\n");
