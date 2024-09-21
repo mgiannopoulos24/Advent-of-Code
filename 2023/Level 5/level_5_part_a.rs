@@ -194,7 +194,7 @@ fn find_lowest_location(seeds: Vec<i64>, mappings: Vec<Vec<MappingRange>>) -> Op
 }
 
 fn main() {
-    let input_file = "input.txt"; // Input file path
+    let input_file = "input_level_5.txt"; // Input file path
     let (seeds, mappings) = get_mappings(input_file);
     if seeds.is_empty() {
         println!("No seeds to process.");
