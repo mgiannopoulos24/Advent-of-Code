@@ -1,57 +1,69 @@
 use std::fs::File;
-use std::io::{self, BufRead};
-
-fn is_digit(c: char) -> bool {
-    c.is_digit(10)
-}
+use std::io::{self, BufRead, BufReader};
 
 fn main() -> io::Result<()> {
-    let path = "input_level_1.txt";
-    let file = File::open(&path)?;
-    let reader = io::BufReader::new(file);
+    let file = File::open("input_level_1.txt")?;
+    let reader = BufReader::new(file);
 
-    let nums = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
     let mut sum = 0;
 
-    for line in reader.lines() {
-        let line = line?;
-        let mut first_digit = None;
-        let mut last_digit = None;
+    // List of spelled-out digits and their numeric equivalents
+    let digit_words = vec![
+        ("one", 1),
+        ("two", 2),
+        ("three", 3),
+        ("four", 4),
+        ("five", 5),
+        ("six", 6),
+        ("seven", 7),
+        ("eight", 8),
+        ("nine", 9),
+    ];
 
-        let mut i = 0;
-        while i < line.len() {
-            let c = line.chars().nth(i).unwrap();
-            if is_digit(c) {
-                let digit = c.to_digit(10).unwrap();
-                if first_digit.is_none() {
-                    first_digit = Some(digit);
-                } else {
-                    last_digit = Some(digit);
-                }
-            } else {
-                let remaining = &line[i..];
-                for (j, &num) in nums.iter().enumerate() {
-                    if remaining.starts_with(num) {
-                        let n = (j + 1) as u32;
-                        if first_digit.is_none() {
-                            first_digit = Some(n);
-                        } else {
-                            last_digit = Some(n);
-                        }
-                        i += num.len() - 1; 
+    for line_result in reader.lines() {
+        let line = line_result?;
+        let line_lower = line.to_lowercase();
+        let n = line_lower.len();
+        let chars: Vec<char> = line_lower.chars().collect();
+
+        let mut digits = Vec::new();
+
+        for i in 0..n {
+            let c = chars[i];
+
+            // Check for numeric digits
+            if c.is_digit(10) {
+                let digit = c.to_digit(10).unwrap() as i32;
+                digits.push((i, digit));
+                continue;
+            }
+
+            // Check for spelled-out digits
+            for (word, value) in &digit_words {
+                let word_len = word.len();
+                if i + word_len <= n {
+                    let slice: String = chars[i..i + word_len].iter().collect();
+                    if slice == *word {
+                        digits.push((i, *value));
+                        // Do not advance i; check for overlapping matches
                         break;
                     }
                 }
             }
-            i += 1;
         }
 
-        let first_digit = first_digit.unwrap_or(0);
-        let last_digit = last_digit.unwrap_or(first_digit); 
-        sum += first_digit * 10 + last_digit;
+        if !digits.is_empty() {
+            digits.sort_by_key(|&(pos, _)| pos);
+            let first_digit = digits.first().unwrap().1;
+            let last_digit = digits.last().unwrap().1;
+            let combined_digit = first_digit * 10 + last_digit;
+            sum += combined_digit;
+            println!("String: {} Combined digit: {}", line, combined_digit);
+        } else {
+            println!("String: {} Combined digit: 0", line);
+        }
     }
 
-    println!("Calibration value: {}", sum);
-
+    println!("Calibration value is: {}", sum);
     Ok(())
 }
