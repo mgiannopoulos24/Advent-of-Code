@@ -59,6 +59,6 @@ function count_safe_reports_with_dampener(filename)
 end
 
 -- Specify the input file
-local filename = "input.txt"
+local filename = "input_level_2.txt"
 local safe_reports = count_safe_reports_with_dampener(filename)
 print("Number of safe reports with the Problem Dampener: " .. safe_reports)

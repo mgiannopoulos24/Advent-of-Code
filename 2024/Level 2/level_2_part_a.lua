@@ -40,6 +40,6 @@ function count_safe_reports(filename)
 end
 
 -- Specify the input file
-local filename = "input.txt"
+local filename = "input_level_2.txt"
 local safe_reports = count_safe_reports(filename)
 print("Number of safe reports: " .. safe_reports)
