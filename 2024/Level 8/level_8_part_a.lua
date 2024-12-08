@@ -73,7 +73,6 @@ local function count_unique_antinode_locations(file_path)
     return count
 end
 
--- Example usage
-local input_file = "input_level_8.txt" -- Replace with your file path
+local input_file = "input_level_8.txt" 
 local result = count_unique_antinode_locations(input_file)
 print("Unique antinode locations:", result)
