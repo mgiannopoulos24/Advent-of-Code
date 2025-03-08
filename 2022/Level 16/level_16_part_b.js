@@ -87,7 +87,7 @@ function generatePaths(graph, timeLeft, current, opened, pressure, paths) {
 }
 
 function main() {
-  const inputData = fs.readFileSync('input.txt', 'utf8').split('\n');
+  const inputData = fs.readFileSync('input_level_16.txt', 'utf8').split('\n');
   const valves = parseInput(inputData);
   
   // Create optimized graph with only relevant valves
