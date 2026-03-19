@@ -27,8 +27,8 @@
             # 2017 (Ballerina)
             ballerina
 
-            # 2018 (Common Lisp + Python)
-            sbcl
+            # 2018 (Common Lisp)
+            clisp
 
             # 2019 (Ruby)
             ruby
@@ -51,7 +51,6 @@
 
             # 2025 (Haskell)
             ghc
-            cabal-install
           ];
         };
       }
